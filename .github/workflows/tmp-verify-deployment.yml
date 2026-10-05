@@ -26,7 +26,7 @@ jobs:
           echo "health_body=$(cat health.json 2>/dev/null)"
           openapi_code="$(curl -sS -m 30 -o openapi.json -w '%{http_code}' "$BASE_URL/api/openapi.json" || echo 000)"
           echo "openapi_status=$openapi_code"
-          node -e "const d=require('./openapi.json');console.log('openapi_ok='+(d.ok===true));console.log('openapi_paths='+Object.keys(d.paths||{}).length);console.log('openapi_auth_paths='+JSON.stringify(Object.keys(d.paths||{}).filter(p=>/auth|login|session/i.test(p))))"
+          node -e "const d=require('./openapi.json');console.log('openapi_ok='+(d.ok===true));console.log('openapi_top_keys='+Object.keys(d).join(','));console.log('openapi_paths_type='+(typeof d.paths))"
 
       - name: Check admin login
         continue-on-error: true
@@ -43,4 +43,5 @@ jobs:
             --data "$(node -e 'console.log(JSON.stringify({username:process.env.ADMIN_USERNAME,password:process.env.ADMIN_PASSWORD}))')" \
             "$BASE_URL/api/v1/auth/login" || echo 000)"
           echo "login_status=$login_code"
-          node -e "const d=require('./login.json');console.log('login_keys='+Object.keys(d).join(','));console.log('login_ok='+(d.ok===true||Boolean(d.token)||Boolean(d.session)))"
+          echo "login_body=$(cat login.json 2>/dev/null)"
+          node -e "const d=require('./login.json');console.log('login_authenticated='+d.authenticated);console.log('login_sessionToken_present='+Boolean(d.sessionToken));console.log('login_username='+(d.user&&d.user.username))"
